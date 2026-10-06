@@ -221,8 +221,38 @@ input[type="range"] {
   color: #817567;
 }
 
+.week-navigation {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+}
+
+.week-navigation button {
+  border: 1px solid #ddd2bf;
+  background: white;
+  color: #51473d;
+  border-radius: 10px;
+  padding: 9px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.week-navigation button:disabled {
+  color: #c5bdb3;
+  background: #f8f5f0;
+}
+
+.week-title {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
 .chart {
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 .bar-row {
@@ -300,6 +330,7 @@ footer {
   <div class="section">
     <label>食事</label>
     <div class="options" id="mealOptions">
+      <button class="option" data-value="多い">多い</button>
       <button class="option" data-value="普通">普通</button>
       <button class="option" data-value="少なめ">少なめ</button>
       <button class="option" data-value="ほぼ無理">ほぼ無理</button>
@@ -319,6 +350,7 @@ footer {
     <div class="options" id="workOptions">
       <button class="option" data-value="なし">なし</button>
       <button class="option" data-value="少し">少し</button>
+      <button class="option" data-value="在宅対応">在宅対応</button>
       <button class="option" data-value="かなり">かなり</button>
     </div>
   </div>
@@ -326,6 +358,7 @@ footer {
   <div class="section">
     <label>きっかけ</label>
     <div class="options" id="triggerOptions">
+      <button class="option" data-value="特になし">特になし</button>
       <button class="option" data-value="空腹">空腹</button>
       <button class="option" data-value="におい">におい</button>
       <button class="option" data-value="通勤">通勤</button>
@@ -350,7 +383,17 @@ footer {
 </div>
 
 <div class="card">
-  <h2>📊 過去7日間</h2>
+  <h2>📊 週間集計</h2>
+
+  <div class="week-navigation">
+    <button id="previousWeek">← 前の週</button>
+    <div class="week-title" id="weekTitle"></div>
+    <button id="nextWeek">次の週 →</button>
+  </div>
+
+  <button class="tab" id="currentWeekButton" style="width:100%; margin-bottom:14px;">
+    今週に戻る
+  </button>
 
   <div class="summary">
     <div class="summary-item">
@@ -393,13 +436,18 @@ let current = {
 
 let viewMode = "today";
 
+// 週間集計の基準日。
+// 0 = 今週、-1 = 先週、-2 = 2週間前...
+let selectedWeekOffset = 0;
+
 function selectOption(groupId, key) {
+
   const group = document.getElementById(groupId);
 
   group.querySelectorAll(".option").forEach(button => {
-    button.classList.remove("selected");
 
     button.onclick = () => {
+
       group.querySelectorAll(".option").forEach(b => {
         b.classList.remove("selected");
       });
@@ -407,6 +455,7 @@ function selectOption(groupId, key) {
       button.classList.add("selected");
       current[key] = button.dataset.value;
     };
+
   });
 }
 
@@ -425,12 +474,13 @@ nausea.addEventListener("input", () => {
 
 document.getElementById("saveButton").addEventListener("click", () => {
 
-  if (!current.time ||
-      !current.meal ||
-      !current.vomit ||
-      !current.work ||
-      !current.trigger) {
-
+  if (
+    !current.time ||
+    !current.meal ||
+    !current.vomit ||
+    !current.work ||
+    !current.trigger
+  ) {
     showMessage("未選択の項目があります。");
     return;
   }
@@ -480,7 +530,9 @@ function resetForm() {
 }
 
 function showMessage(text) {
+
   const message = document.getElementById("message");
+
   message.textContent = text;
 
   setTimeout(() => {
@@ -499,15 +551,17 @@ function formatDate(dateString) {
   ).padStart(2, "0")}`;
 }
 
-function todayString() {
+function getLocalDateKey(date) {
 
-  const d = new Date();
-
-  return `${d.getFullYear()}-${String(
-    d.getMonth() + 1
+  return `${date.getFullYear()}-${String(
+    date.getMonth() + 1
   ).padStart(2, "0")}-${String(
-    d.getDate()
+    date.getDate()
   ).padStart(2, "0")}`;
+}
+
+function todayString() {
+  return getLocalDateKey(new Date());
 }
 
 function render() {
@@ -517,23 +571,21 @@ function render() {
   let filtered = records;
 
   if (viewMode === "today") {
+
     filtered = records.filter(record => {
+
       const d = new Date(record.date);
 
-      const date =
-        `${d.getFullYear()}-${String(
-          d.getMonth() + 1
-        ).padStart(2, "0")}-${String(
-          d.getDate()
-        ).padStart(2, "0")}`;
+      return getLocalDateKey(d) === todayString();
 
-      return date === todayString();
     });
   }
 
   if (filtered.length === 0) {
+
     container.innerHTML =
       '<div class="empty">まだ記録がありません。</div>';
+
   } else {
 
     container.innerHTML = filtered.map(record => {
@@ -610,70 +662,108 @@ document.getElementById("allTab").onclick = () => {
   render();
 };
 
+/*
+  日曜日始まりの週を取得する。
+
+  offset = 0  → 今週
+  offset = -1 → 先週
+  offset = -2 → 2週間前
+*/
+function getWeekRange(offset) {
+
+  const today = new Date();
+
+  today.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(today);
+
+  sunday.setDate(
+    today.getDate() - today.getDay() + (offset * 7)
+  );
+
+  const saturday = new Date(sunday);
+
+  saturday.setDate(sunday.getDate() + 6);
+
+  return {
+    start: sunday,
+    end: saturday
+  };
+}
+
+function formatWeekDate(date) {
+
+  return `${date.getMonth() + 1}/${date.getDate()}`;
+}
+
 function renderSummary() {
 
-  const now = new Date();
+  const range = getWeekRange(selectedWeekOffset);
 
-  const sevenDaysAgo =
-    new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekRecords = records.filter(record => {
 
-  const last7 = records.filter(record => {
-    return new Date(record.date) >= sevenDaysAgo;
+    const date = new Date(record.date);
+
+    return date >= range.start &&
+           date < new Date(
+             range.end.getFullYear(),
+             range.end.getMonth(),
+             range.end.getDate() + 1
+           );
   });
 
+  const weekTitle =
+    `${formatWeekDate(range.start)} ～ ${formatWeekDate(range.end)}`;
+
+  document.getElementById("weekTitle").textContent =
+    weekTitle;
+
   document.getElementById("count7").textContent =
-    last7.length;
+    weekRecords.length;
 
   const avg =
-    last7.length
+    weekRecords.length
       ? (
-          last7.reduce(
+          weekRecords.reduce(
             (sum, record) => sum + record.nausea,
             0
-          ) / last7.length
+          ) / weekRecords.length
         ).toFixed(1)
       : "0";
 
   document.getElementById("avg7").textContent = avg;
 
   document.getElementById("vomit7").textContent =
-    last7.filter(record => record.vomit === "あり").length;
+    weekRecords.filter(
+      record => record.vomit === "あり"
+    ).length;
 
-  renderChart(last7);
+  renderChart(range, weekRecords);
+
+  document.getElementById("nextWeek").disabled =
+    selectedWeekOffset >= 0;
 }
 
-function renderChart(last7) {
+function renderChart(range, weekRecords) {
 
   const chart = document.getElementById("chart");
 
   const data = [];
 
-  for (let i = 6; i >= 0; i--) {
+  for (let i = 0; i < 7; i++) {
 
-    const date = new Date();
+    const date = new Date(range.start);
 
-    date.setHours(0, 0, 0, 0);
-    date.setDate(date.getDate() - i);
+    date.setDate(range.start.getDate() + i);
 
-    const key =
-      `${date.getFullYear()}-${String(
-        date.getMonth() + 1
-      ).padStart(2, "0")}-${String(
-        date.getDate()
-      ).padStart(2, "0")}`;
+    const key = getLocalDateKey(date);
 
-    const dayRecords = last7.filter(record => {
+    const dayRecords = weekRecords.filter(record => {
 
       const d = new Date(record.date);
 
-      const recordKey =
-        `${d.getFullYear()}-${String(
-          d.getMonth() + 1
-        ).padStart(2, "0")}-${String(
-          d.getDate()
-        ).padStart(2, "0")}`;
+      return getLocalDateKey(d) === key;
 
-      return recordKey === key;
     });
 
     const average =
@@ -684,8 +774,19 @@ function renderChart(last7) {
           ) / dayRecords.length
         : 0;
 
+    const weekdays = [
+      "日",
+      "月",
+      "火",
+      "水",
+      "木",
+      "金",
+      "土"
+    ];
+
     data.push({
-      label: `${date.getMonth() + 1}/${date.getDate()}`,
+      label:
+        `${date.getMonth() + 1}/${date.getDate()} (${weekdays[date.getDay()]})`,
       value: average
     });
   }
@@ -718,14 +819,40 @@ function renderChart(last7) {
   }).join("");
 }
 
+document.getElementById("previousWeek").onclick = () => {
+
+  selectedWeekOffset--;
+
+  renderSummary();
+};
+
+document.getElementById("nextWeek").onclick = () => {
+
+  if (selectedWeekOffset < 0) {
+    selectedWeekOffset++;
+    renderSummary();
+  }
+};
+
+document.getElementById("currentWeekButton").onclick = () => {
+
+  selectedWeekOffset = 0;
+
+  renderSummary();
+};
+
 render();
 </script>
 
 <script>
 if ("serviceWorker" in navigator) {
+
   window.addEventListener("load", () => {
+
     navigator.serviceWorker.register("sw.js");
+
   });
+
 }
 </script>
 
