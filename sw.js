@@ -1,4 +1,4 @@
-const CACHE_NAME = "taichou-log-v1";
+const CACHE_NAME = "taichou-log-v2";
 
 const FILES_TO_CACHE = [
   "./",
