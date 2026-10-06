@@ -1,1 +1,0 @@
-# taichou-log2
