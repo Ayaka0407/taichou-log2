@@ -1,0 +1,16 @@
+{
+  "name": "体調ログ",
+  "short_name": "体調ログ",
+  "description": "毎日の体調や気持ち悪さを記録するアプリ",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fffaf0",
+  "theme_color": "#fff0a8",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
