@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#fff4b8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="体調ログ">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
+
+<title>体調ログ</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #fffaf0;
+  color: #4b4035;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Hiragino Kaku Gothic ProN",
+    "Yu Gothic",
+    sans-serif;
+}
+
+header {
+  background: #fff0a8;
+  padding: 22px 18px 18px;
+  text-align: center;
+  border-bottom: 1px solid #f1dda0;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+header p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: #756858;
+}
+
+main {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(80, 60, 20, 0.06);
+}
+
+h2 {
+  font-size: 18px;
+  margin: 0 0 16px;
+}
+
+label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+button.option {
+  appearance: none;
+  border: 1px solid #ddd2bf;
+  background: #fffdf8;
+  color: #51473d;
+  padding: 12px 8px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+button.option.selected {
+  background: #fff0a8;
+  border-color: #e5ca63;
+  font-weight: 700;
+}
+
+.nausea-value {
+  text-align: center;
+  font-size: 34px;
+  font-weight: 700;
+  margin: 4px 0 8px;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: #e6c84f;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #8b7d6d;
+}
+
+.save-button {
+  width: 100%;
+  border: none;
+  border-radius: 15px;
+  background: #e8c94f;
+  color: #3f351f;
+  font-size: 17px;
+  font-weight: 700;
+  padding: 15px;
+}
+
+.save-button:active {
+  transform: scale(0.98);
+}
+
+.message {
+  text-align: center;
+  font-size: 13px;
+  margin-top: 10px;
+  min-height: 20px;
+  color: #6b5b49;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tab {
+  flex: 1;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd2bf;
+  background: white;
+  font-weight: 600;
+}
+
+.tab.active {
+  background: #fff0a8;
+  border-color: #e5ca63;
+}
+
+.record {
+  border-top: 1px solid #eee5d8;
+  padding: 13px 0;
+}
+
+.record:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.record-time {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.record-detail {
+  font-size: 13px;
+  line-height: 1.7;
+  margin-top: 4px;
+}
+
+.delete {
+  border: none;
+  background: #f6eee5;
+  color: #8b6553;
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 12px;
+  float: right;
+}
+
+.empty {
+  text-align: center;
+  color: #8d8174;
+  padding: 20px 0;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.summary-item {
+  background: #fffaf0;
+  border-radius: 12px;
+  padding: 12px 5px;
+  text-align: center;
+}
+
+.summary-number {
+  font-size: 23px;
+  font-weight: 700;
+}
+
+.summary-label {
+  font-size: 11px;
+  color: #817567;
+}
+
+.chart {
+  margin-top: 14px;
+}
+
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 7px 0;
+  font-size: 11px;
+}
+
+.bar-label {
+  width: 42px;
+  text-align: right;
+}
+
+.bar-bg {
+  flex: 1;
+  height: 18px;
+  background: #f4eee5;
+  border-radius: 9px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: #f0d66f;
+  border-radius: 9px;
+}
+
+.bar-value {
+  width: 25px;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: #9a8d7e;
+  font-size: 11px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>🌼 体調ログ</h1>
+  <p>その日の体調をかんたんに記録</p>
+</header>
+
+<main>
+
+<div class="card">
+  <h2>📝 体調を記録</h2>
+
+  <div class="section">
+    <label>時間帯</label>
+    <div class="options" id="timeOptions">
+      <button class="option" data-value="朝">朝</button>
+      <button class="option" data-value="昼">昼</button>
+      <button class="option" data-value="夕方">夕方</button>
+      <button class="option" data-value="夜">夜</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>気持ち悪さ</label>
+    <div class="nausea-value" id="nauseaValue">0</div>
+    <input type="range" id="nausea" min="0" max="10" value="0">
+    <div class="range-labels">
+      <span>0：なし</span>
+      <span>10：非常に強い</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>食事</label>
+    <div class="options" id="mealOptions">
+      <button class="option" data-value="普通">普通</button>
+      <button class="option" data-value="少なめ">少なめ</button>
+      <button class="option" data-value="ほぼ無理">ほぼ無理</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>嘔吐</label>
+    <div class="options" id="vomitOptions">
+      <button class="option" data-value="なし">なし</button>
+      <button class="option" data-value="あり">あり</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>出社への影響</label>
+    <div class="options" id="workOptions">
+      <button class="option" data-value="なし">なし</button>
+      <button class="option" data-value="少し">少し</button>
+      <button class="option" data-value="かなり">かなり</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <label>きっかけ</label>
+    <div class="options" id="triggerOptions">
+      <button class="option" data-value="空腹">空腹</button>
+      <button class="option" data-value="におい">におい</button>
+      <button class="option" data-value="通勤">通勤</button>
+      <button class="option" data-value="疲労">疲労</button>
+      <button class="option" data-value="その他">その他</button>
+    </div>
+  </div>
+
+  <button class="save-button" id="saveButton">この内容を記録する</button>
+  <div class="message" id="message"></div>
+</div>
+
+<div class="card">
+  <h2>📋 記録</h2>
+
+  <div class="tabs">
+    <button class="tab active" id="todayTab">今日</button>
+    <button class="tab" id="allTab">すべて</button>
+  </div>
+
+  <div id="records"></div>
+</div>
+
+<div class="card">
+  <h2>📊 過去7日間</h2>
+
+  <div class="summary">
+    <div class="summary-item">
+      <div class="summary-number" id="count7">0</div>
+      <div class="summary-label">記録回数</div>
+    </div>
+
+    <div class="summary-item">
+      <div class="summary-number" id="avg7">0</div>
+      <div class="summary-label">平均気持ち悪さ</div>
+    </div>
+
+    <div class="summary-item">
+      <div class="summary-number" id="vomit7">0</div>
+      <div class="summary-label">嘔吐回数</div>
+    </div>
+  </div>
+
+  <div class="chart" id="chart"></div>
+</div>
+
+</main>
+
+<footer>
+  このアプリの記録は、この端末のブラウザ内に保存されます。
+</footer>
+
+<script>
+const STORAGE_KEY = "taichou-log-records";
+
+let records = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+let current = {
+  time: "",
+  meal: "",
+  vomit: "",
+  work: "",
+  trigger: ""
+};
+
+let viewMode = "today";
+
+function selectOption(groupId, key) {
+  const group = document.getElementById(groupId);
+
+  group.querySelectorAll(".option").forEach(button => {
+    button.classList.remove("selected");
+
+    button.onclick = () => {
+      group.querySelectorAll(".option").forEach(b => {
+        b.classList.remove("selected");
+      });
+
+      button.classList.add("selected");
+      current[key] = button.dataset.value;
+    };
+  });
+}
+
+selectOption("timeOptions", "time");
+selectOption("mealOptions", "meal");
+selectOption("vomitOptions", "vomit");
+selectOption("workOptions", "work");
+selectOption("triggerOptions", "trigger");
+
+const nausea = document.getElementById("nausea");
+const nauseaValue = document.getElementById("nauseaValue");
+
+nausea.addEventListener("input", () => {
+  nauseaValue.textContent = nausea.value;
+});
+
+document.getElementById("saveButton").addEventListener("click", () => {
+
+  if (!current.time ||
+      !current.meal ||
+      !current.vomit ||
+      !current.work ||
+      !current.trigger) {
+
+    showMessage("未選択の項目があります。");
+    return;
+  }
+
+  const now = new Date();
+
+  const record = {
+    id: Date.now(),
+    date: now.toISOString(),
+    time: current.time,
+    nausea: Number(nausea.value),
+    meal: current.meal,
+    vomit: current.vomit,
+    work: current.work,
+    trigger: current.trigger
+  };
+
+  records.unshift(record);
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(records)
+  );
+
+  showMessage("記録しました 🌼");
+
+  resetForm();
+  render();
+});
+
+function resetForm() {
+
+  current = {
+    time: "",
+    meal: "",
+    vomit: "",
+    work: "",
+    trigger: ""
+  };
+
+  document.querySelectorAll(".option").forEach(button => {
+    button.classList.remove("selected");
+  });
+
+  nausea.value = 0;
+  nauseaValue.textContent = "0";
+}
+
+function showMessage(text) {
+  const message = document.getElementById("message");
+  message.textContent = text;
+
+  setTimeout(() => {
+    message.textContent = "";
+  }, 2500);
+}
+
+function formatDate(dateString) {
+
+  const date = new Date(dateString);
+
+  return `${date.getMonth() + 1}/${date.getDate()} ${String(
+    date.getHours()
+  ).padStart(2, "0")}:${String(
+    date.getMinutes()
+  ).padStart(2, "0")}`;
+}
+
+function todayString() {
+
+  const d = new Date();
+
+  return `${d.getFullYear()}-${String(
+    d.getMonth() + 1
+  ).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
+}
+
+function render() {
+
+  const container = document.getElementById("records");
+
+  let filtered = records;
+
+  if (viewMode === "today") {
+    filtered = records.filter(record => {
+      const d = new Date(record.date);
+
+      const date =
+        `${d.getFullYear()}-${String(
+          d.getMonth() + 1
+        ).padStart(2, "0")}-${String(
+          d.getDate()
+        ).padStart(2, "0")}`;
+
+      return date === todayString();
+    });
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML =
+      '<div class="empty">まだ記録がありません。</div>';
+  } else {
+
+    container.innerHTML = filtered.map(record => {
+
+      return `
+        <div class="record">
+
+          <button
+            class="delete"
+            onclick="deleteRecord(${record.id})">
+            削除
+          </button>
+
+          <div class="record-time">
+            ${formatDate(record.date)} ・ ${record.time}
+          </div>
+
+          <div class="record-detail">
+            気持ち悪さ：${record.nausea}/10<br>
+            食事：${record.meal}<br>
+            嘔吐：${record.vomit}<br>
+            出社への影響：${record.work}<br>
+            きっかけ：${record.trigger}
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+  }
+
+  renderSummary();
+}
+
+function deleteRecord(id) {
+
+  if (!confirm("この記録を削除しますか？")) {
+    return;
+  }
+
+  records = records.filter(record => record.id !== id);
+
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(records)
+  );
+
+  render();
+}
+
+document.getElementById("todayTab").onclick = () => {
+
+  viewMode = "today";
+
+  document.getElementById("todayTab")
+    .classList.add("active");
+
+  document.getElementById("allTab")
+    .classList.remove("active");
+
+  render();
+};
+
+document.getElementById("allTab").onclick = () => {
+
+  viewMode = "all";
+
+  document.getElementById("allTab")
+    .classList.add("active");
+
+  document.getElementById("todayTab")
+    .classList.remove("active");
+
+  render();
+};
+
+function renderSummary() {
+
+  const now = new Date();
+
+  const sevenDaysAgo =
+    new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  const last7 = records.filter(record => {
+    return new Date(record.date) >= sevenDaysAgo;
+  });
+
+  document.getElementById("count7").textContent =
+    last7.length;
+
+  const avg =
+    last7.length
+      ? (
+          last7.reduce(
+            (sum, record) => sum + record.nausea,
+            0
+          ) / last7.length
+        ).toFixed(1)
+      : "0";
+
+  document.getElementById("avg7").textContent = avg;
+
+  document.getElementById("vomit7").textContent =
+    last7.filter(record => record.vomit === "あり").length;
+
+  renderChart(last7);
+}
+
+function renderChart(last7) {
+
+  const chart = document.getElementById("chart");
+
+  const data = [];
+
+  for (let i = 6; i >= 0; i--) {
+
+    const date = new Date();
+
+    date.setHours(0, 0, 0, 0);
+    date.setDate(date.getDate() - i);
+
+    const key =
+      `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}-${String(
+        date.getDate()
+      ).padStart(2, "0")}`;
+
+    const dayRecords = last7.filter(record => {
+
+      const d = new Date(record.date);
+
+      const recordKey =
+        `${d.getFullYear()}-${String(
+          d.getMonth() + 1
+        ).padStart(2, "0")}-${String(
+          d.getDate()
+        ).padStart(2, "0")}`;
+
+      return recordKey === key;
+    });
+
+    const average =
+      dayRecords.length
+        ? dayRecords.reduce(
+            (sum, record) => sum + record.nausea,
+            0
+          ) / dayRecords.length
+        : 0;
+
+    data.push({
+      label: `${date.getMonth() + 1}/${date.getDate()}`,
+      value: average
+    });
+  }
+
+  chart.innerHTML = data.map(item => {
+
+    const width = item.value * 10;
+
+    return `
+      <div class="bar-row">
+
+        <div class="bar-label">
+          ${item.label}
+        </div>
+
+        <div class="bar-bg">
+          <div
+            class="bar"
+            style="width:${width}%">
+          </div>
+        </div>
+
+        <div class="bar-value">
+          ${item.value ? item.value.toFixed(1) : "-"}
+        </div>
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+render();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js");
+  });
+}
+</script>
+
+</body>
+</html>
